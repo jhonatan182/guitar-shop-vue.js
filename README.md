@@ -4,7 +4,7 @@ Proyecto de un ecommerce de venta de guitarras, en este mismo proyecto estoy apr
 ## URL
 
 ```
-HTTL
+https://jhonatan-vargas-guitar-la.netlify.app/
 ```
 
 
