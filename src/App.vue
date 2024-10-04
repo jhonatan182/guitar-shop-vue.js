@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { GuitarraResponse, Carrito } from './interfaces';
-import { db } from './data/guitarras'
-import Guitarra from './components/Guitarra.vue'
-import Header from './components/Header.vue'
-import Footer from './components/Footer.vue'
+import { Toaster, toast } from "vue-sonner";
+import { ref, onMounted, watch } from "vue";
+import { GuitarraResponse, Carrito } from "./interfaces";
+import { db } from "./data/guitarras";
+import Guitarra from "./components/Guitarra.vue";
+import Header from "./components/Header.vue";
+import Footer from "./components/Footer.vue";
 
 // interface PropsState {
 //     guitarras: Guitarra[]
@@ -14,107 +15,124 @@ import Footer from './components/Footer.vue'
 //     guitarras: db
 // })
 
-const guitarras = ref<GuitarraResponse[]>([])
-const carrito = ref<Carrito[]>([])
+const guitarras = ref<GuitarraResponse[]>([]);
+const carrito = ref<Carrito[]>([]);
 const guitarra = ref<GuitarraResponse>({
-    id: 0,
-    nombre: '',
-    imagen: '',
-    descripcion: '',
-    precio: 0
-}
-)
+  id: 0,
+  nombre: "",
+  imagen: "",
+  descripcion: "",
+  precio: 0,
+});
 
-
-watch(carrito, () => {
-    agregarLocalStorage()
-}, {
-    deep: true
-})
+watch(
+  carrito,
+  () => {
+    agregarLocalStorage();
+  },
+  {
+    deep: true,
+  }
+);
 
 onMounted(() => {
-    guitarras.value = db
-    guitarra.value = db[3]
+  guitarras.value = db;
+  guitarra.value = db[3];
 
-    const carritoStorage = localStorage.getItem('carrito');
+  const carritoStorage = localStorage.getItem("carrito");
 
-    if (carritoStorage) {
-        carrito.value = JSON.parse(carritoStorage)
-    }
-})
-
+  if (carritoStorage) {
+    carrito.value = JSON.parse(carritoStorage);
+  }
+});
 
 const agregarLocalStorage = () => {
-    localStorage.setItem('carrito', JSON.stringify(carrito.value))
-
-}
+  localStorage.setItem("carrito", JSON.stringify(carrito.value));
+};
 
 const agregarCarrito = (guitarra: GuitarraResponse) => {
+  const existeCarrito: number = carrito.value.findIndex(
+    (producto) => producto.id === guitarra.id
+  );
 
-    const existeCarrito: number = carrito.value.findIndex(producto => producto.id === guitarra.id)
-
-    //ya existe en el carrito
-    if (existeCarrito >= 0) {
-        carrito.value[existeCarrito].cantidad++;
-
-    } else {
-        const guitarraCarrito: Carrito = {
-            ...guitarra,
-            cantidad: 1
-        }
-        carrito.value.push(guitarraCarrito)
-    }
-
-}
+  //ya existe en el carrito
+  if (existeCarrito >= 0) {
+    carrito.value[existeCarrito].cantidad++;
+    toast.success("Cantidad actualizada");
+  } else {
+    toast.success("Guitarra agregada al carrito");
+    const guitarraCarrito: Carrito = {
+      ...guitarra,
+      cantidad: 1,
+    };
+    carrito.value.push(guitarraCarrito);
+  }
+};
 
 const decrementarCantidad = (id: number) => {
+  const indexGuitarra: number = carrito.value.findIndex(
+    (producto) => producto.id === id
+  );
 
-    const indexGuitarra: number = carrito.value.findIndex(producto => producto.id === id)
+  if (carrito.value[indexGuitarra].cantidad <= 1) return;
 
-    if (carrito.value[indexGuitarra].cantidad <= 1) return
-
-    carrito.value[indexGuitarra].cantidad--;
-
-}
+  carrito.value[indexGuitarra].cantidad--;
+};
 
 const incrementarCantidad = (id: number) => {
-    const indexGuitarra: number = carrito.value.findIndex(producto => producto.id === id)
+  const indexGuitarra: number = carrito.value.findIndex(
+    (producto) => producto.id === id
+  );
 
-    if (carrito.value[indexGuitarra].cantidad >= 5) return
+  if (carrito.value[indexGuitarra].cantidad >= 5) return;
 
-    carrito.value[indexGuitarra].cantidad++;
-
-}
+  carrito.value[indexGuitarra].cantidad++;
+};
 
 const eliminarProductoCarrito = (id: number) => {
-    const productosFiltrados = carrito.value.filter(producto => producto.id !== id);
-    carrito.value = productosFiltrados
-}
+  const productosFiltrados = carrito.value.filter(
+    (producto) => producto.id !== id
+  );
+  carrito.value = productosFiltrados;
+
+  toast.success("Guitarra eliminada de tu carrito");
+};
 
 const vaciarCarrito = () => {
-    carrito.value = []
-}
+  toast.success("Se ha borrado tu carrito");
 
+  carrito.value = [];
+};
 </script>
 
 <template>
-    <body>
-        <Header v-bind:carrito="carrito" @decrementar-cantidad="decrementarCantidad"
-            @incrementar-cantidad="incrementarCantidad" @agregar-carrito="agregarCarrito" :guitarra="guitarra"
-            @eliminar-producto-carrito="eliminarProductoCarrito" @vaciar-carrito="vaciarCarrito" />
+  <body>
+    <Toaster richColors closeButton />
 
-        <main class="container-xl mt-5">
-            <h2 class="text-center">Nuestra Colección</h2>
+    <Header
+      v-bind:carrito="carrito"
+      @decrementar-cantidad="decrementarCantidad"
+      @incrementar-cantidad="incrementarCantidad"
+      @agregar-carrito="agregarCarrito"
+      :guitarra="guitarra"
+      @eliminar-producto-carrito="eliminarProductoCarrito"
+      @vaciar-carrito="vaciarCarrito"
+    />
 
-            <div class="row mt-5">
-                <Guitarra v-for="guitarra in guitarras" v-bind:guitarra="guitarra" @agregar-carrito="agregarCarrito" />
-            </div>
-        </main>
+    <main class="container-xl mt-5">
+      <h2 class="text-center">Nuestra Colección</h2>
 
-        <Footer />
-    </body>
+      <div class="row mt-5">
+        <Guitarra
+          v-for="guitarra in guitarras"
+          v-bind:guitarra="guitarra"
+          @agregar-carrito="agregarCarrito"
+        />
+      </div>
+    </main>
+
+    <Footer />
+  </body>
 </template>
 
 <style scoped></style>
-
-
